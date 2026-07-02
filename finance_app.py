@@ -5,15 +5,6 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pickle
 import os
-# Add this code block right under your imports at the top of finance_app.py
-import src.finance_pipeline as pipeline
-
-# Check if data or models are missing; if so, trigger pipeline automatically
-required_file = os.path.join('data', 'processed', 'AAPL_market_data.csv')
-if not os.path.exists(required_file):
-    with st.spinner("Initializing live quantitative pipeline and training ML models... Please wait."):
-        pipeline.run_pipeline()
-
 st.set_page_config(page_title="Quantitative Risk & Alpha Engine", layout="wide")
 st.title("📈 Quantitative Portfolio Risk & Alpha Engine")
 st.write("A production-grade interface tracking cross-asset correlation networks and directional predictive analytics.")
