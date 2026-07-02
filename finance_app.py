@@ -5,6 +5,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import pickle
 import os
+
 st.set_page_config(page_title="Quantitative Risk & Alpha Engine", layout="wide")
 st.title("📈 Quantitative Portfolio Risk & Alpha Engine")
 st.write("A production-grade interface tracking cross-asset correlation networks and directional predictive analytics.")
@@ -12,19 +13,19 @@ st.write("A production-grade interface tracking cross-asset correlation networks
 # Tracked portfolio assets
 assets = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
 
-# Use legacy caching system verified for your specific library build
 @st.cache
 def load_portfolio_data():
     portfolio = {}
     for asset in assets:
-        path = os.path.join('data', 'processed', f'{asset}_market_data.csv')
+        # LOOK HERE: We removed 'data/processed/' because files are in your main GitHub folder now!
+        path = f'{asset}_market_data.csv'
         if os.path.exists(path):
             portfolio[asset] = pd.read_csv(path, parse_dates=['Date'], index_col='Date')
     return portfolio
 
 portfolio_data = load_portfolio_data()
 
-# Robust Sidebar Navigation (Bypasses layout elements constraints of legacy libraries)
+# Sidebar Navigation Panel
 st.sidebar.header("Platform Navigation")
 app_mode = st.sidebar.selectbox("Choose Engine Display", ["📊 Multi-Asset Risk Analytics (BI)", "🔮 Directional Movement Alpha (ML)"])
 
@@ -32,12 +33,11 @@ if app_mode == "📊 Multi-Asset Risk Analytics (BI)":
     st.subheader("Asset Performance & Correlation Framework")
     
     if not portfolio_data:
-        st.error("No processed data files mapped. Please initialize your analytics pipeline!")
+        st.error("No processed data files mapped. Make sure your CSV files are in the main repository folder!")
     else:
         close_prices = pd.DataFrame({ticker: df['Close'] for ticker, df in portfolio_data.items()})
         returns_df = close_prices.pct_change().dropna()
         
-        # Display tracking components side by side using standard layout structures
         col1, col2 = st.beta_columns(2)
         
         with col1:
@@ -71,7 +71,8 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
         
         st.write("---")
         if st.button(f"Generate Next-Day Movement Vector for {selected_asset}"):
-            model_path = os.path.join('data', 'processed', f'{selected_asset}_model.pkl')
+            # LOOK HERE: Checking the main folder for the model files
+            model_path = f'{selected_asset}_model.pkl'
             with open(model_path, 'rb') as f:
                 model = pickle.load(f)
                 
@@ -80,6 +81,6 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
             probability = model.predict_proba(features_input)
             
             if prediction == 1:
-                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{(probability[0][1]*100):.1f}%**")
+                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{(probability*100):.1f}%**")
             else:
-                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{(probability[0][0]*100):.1f}%**")
+                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{(probability*100):.1f}%**")
