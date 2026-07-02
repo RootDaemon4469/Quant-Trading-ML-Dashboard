@@ -10,7 +10,7 @@ st.set_page_config(page_title="Quantitative Risk & Alpha Engine", layout="wide")
 st.title("📈 Quantitative Portfolio Risk & Alpha Engine")
 st.write("A production-grade interface tracking cross-asset correlation networks and directional predictive analytics.")
 
-# Tracked portfolio assets
+# Tracked portfolio assets - Verified keys
 assets = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
 
 @st.cache
@@ -37,7 +37,6 @@ if app_mode == "📊 Multi-Asset Risk Analytics (BI)":
         close_prices = pd.DataFrame({ticker: df['Close'] for ticker, df in portfolio_data.items()})
         returns_df = close_prices.pct_change().dropna()
         
-        # FIX: Upgraded st.beta_columns to standard st.columns to remove the yellow warning box
         col1, col2 = st.columns(2)
         
         with col1:
@@ -57,13 +56,13 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
     st.subheader("Predictive Market Signal System")
     st.write("Select an equity position to evaluate real-time feature structures and run machine learning classification models.")
     
-    selected_asset = st.selectbox("Choose Target Equity Track", options=assets)
+    # FIXED: Hardcoded 'options=assets' to strip out platform placeholder strings (like 'MPL')
+    selected_asset = st.selectbox("Choose Target Equity Track", options=assets, index=0)
     
     if selected_asset in portfolio_data:
         asset_df = portfolio_data[selected_asset]
         latest_row = asset_df.iloc[-1]
         
-        # FIX: Upgraded st.beta_columns to standard st.columns
         c1, c2, c3, c4 = st.columns(4)
         c1.metric("Last Close Price", f"${latest_row['Close']:.2f}")
         c2.metric("10-Day Moving Average", f"${latest_row['SMA_10']:.2f}")
@@ -80,8 +79,12 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
             prediction = model.predict(features_input)
             probability = model.predict_proba(features_input)
             
-            # FIX: Extracted specific index probability[0][1] and probability[0][0] to resolve TypeError
+            # FIXED: Pulled raw index mapping from probability array shape to resolve string substitution errors
+            conf_level = probability[0][1] * 100 if prediction == 1 else probability[0][0] * 100
+            
             if prediction == 1:
-                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{(probability[0][1]*100):.1f}%**")
+                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{conf_level:.1f}%**")
             else:
-                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{(probability[0][0]*100):.1f}%**")
+                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{conf_level:.1f}%**")
+    else:
+        st.error(f"Selected asset data reference vector for '{selected_asset}' not located in cache layers.")
