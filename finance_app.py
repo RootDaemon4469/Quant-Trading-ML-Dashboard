@@ -17,7 +17,6 @@ assets = ['AAPL', 'MSFT', 'GOOGL', 'AMZN']
 def load_portfolio_data():
     portfolio = {}
     for asset in assets:
-        # LOOK HERE: We removed 'data/processed/' because files are in your main GitHub folder now!
         path = f'{asset}_market_data.csv'
         if os.path.exists(path):
             portfolio[asset] = pd.read_csv(path, parse_dates=['Date'], index_col='Date')
@@ -38,7 +37,8 @@ if app_mode == "📊 Multi-Asset Risk Analytics (BI)":
         close_prices = pd.DataFrame({ticker: df['Close'] for ticker, df in portfolio_data.items()})
         returns_df = close_prices.pct_change().dropna()
         
-        col1, col2 = st.beta_columns(2)
+        # FIX: Upgraded st.beta_columns to standard st.columns to remove the yellow warning box
+        col1, col2 = st.columns(2)
         
         with col1:
             st.write("### Trailing Asset Volatility")
@@ -63,7 +63,8 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
         asset_df = portfolio_data[selected_asset]
         latest_row = asset_df.iloc[-1]
         
-        c1, c2, c3, c4 = st.beta_columns(4)
+        # FIX: Upgraded st.beta_columns to standard st.columns
+        c1, c2, c3, c4 = st.columns(4)
         c1.metric("Last Close Price", f"${latest_row['Close']:.2f}")
         c2.metric("10-Day Moving Average", f"${latest_row['SMA_10']:.2f}")
         c3.metric("50-Day Moving Average", f"${latest_row['SMA_50']:.2f}")
@@ -71,7 +72,6 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
         
         st.write("---")
         if st.button(f"Generate Next-Day Movement Vector for {selected_asset}"):
-            # LOOK HERE: Checking the main folder for the model files
             model_path = f'{selected_asset}_model.pkl'
             with open(model_path, 'rb') as f:
                 model = pickle.load(f)
@@ -80,7 +80,8 @@ elif app_mode == "🔮 Directional Movement Alpha (ML)":
             prediction = model.predict(features_input)
             probability = model.predict_proba(features_input)
             
+            # FIX: Extracted specific index probability[0][1] and probability[0][0] to resolve TypeError
             if prediction == 1:
-                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{(probability*100):.1f}%**")
+                st.success(f"🚀 **Bullish Signal:** Model projects a positive closing trend tomorrow. Confidence level: **{(probability[0][1]*100):.1f}%**")
             else:
-                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{(probability*100):.1f}%**")
+                st.error(f"🐻 **Bearish Signal:** Model projects a downward closing trend tomorrow. Confidence level: **{(probability[0][0]*100):.1f}%**")
